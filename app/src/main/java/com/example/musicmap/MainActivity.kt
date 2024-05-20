@@ -17,7 +17,7 @@ class MainActivity : ComponentActivity() {
         val button: Button = findViewById(R.id.but1)
         button.setOnClickListener {
             // Utwórz intent, aby uruchomić MapsActivity
-            val intent = Intent(this, MapActivity::class.java)
+            val intent = Intent(this, MapsActivity::class.java)
             startActivity(intent)
         }
     }

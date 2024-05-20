@@ -34,7 +34,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".MapActivity"
+            android:name=".MapsActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.MusicMap">

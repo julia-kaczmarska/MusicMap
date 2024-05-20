@@ -1,9 +1,11 @@
 package com.example.musicmap
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
+import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -33,6 +35,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
+        val btnFocusLocation: Button = findViewById(R.id.focus_bt)
+        btnFocusLocation.setOnClickListener {
+            getDeviceLocation()
+        }
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -99,5 +106,4 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
     }
-
 }

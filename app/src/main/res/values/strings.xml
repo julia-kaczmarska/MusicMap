@@ -1,6 +1,9 @@
 <resources>
     <string name="app_name">MusicMap</string>
     <string name="open_map">Open Map</string>
-    <string name="focus_bt">Show my location</string>
+
+    <string name="info">We recommend logging on Spotify premium account for the best user experience</string>
+    <string name="log_in">I'm a pro!</string>
+
 
 </resources>

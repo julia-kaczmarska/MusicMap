@@ -35,6 +35,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private val TAG = "MapsActivity"
     private val markers = mutableListOf<Marker>()
 
+    //---------------------------------------------------------
+    private lateinit var targetMarker: Marker
+    private val targetLatLng = LatLng(50.2892914, 19.1234135)
+    private val SPOTIFY_TRACK_URI = "https://open.spotify.com/track/453W8V5Ynwn6Tr28KuOwsO?si=e4abbd2970084672"
+    //---------------------------------------------------------
+
+
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
@@ -59,12 +68,29 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             mMap.isMyLocationEnabled = true
             getDeviceLocation()
         } else {
-            ActivityCompat.requestPermissions(this,
+            ActivityCompat.requestPermissions(
+                this,
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                LOCATION_PERMISSION_REQUEST_CODE)
+                LOCATION_PERMISSION_REQUEST_CODE
+            )
         }
 
         loadMarkersFromApi()
+
+        targetMarker = mMap.addMarker(MarkerOptions().position(targetLatLng).title("Play Song Here"))!!
+
+        mMap.setOnMarkerClickListener { marker ->
+            if (marker == targetMarker) {
+                playSongOnSpotify()
+            }
+            true
+        }
+    }
+
+    private fun playSongOnSpotify() {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(SPOTIFY_TRACK_URI))
+        intent.putExtra(Intent.EXTRA_REFERRER, Uri.parse("android-app://" + this.packageName))
+        startActivity(intent)
     }
 
 

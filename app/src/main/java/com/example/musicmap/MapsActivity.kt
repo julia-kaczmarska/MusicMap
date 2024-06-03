@@ -1,10 +1,9 @@
 package com.example.musicmap
 
 import android.Manifest
-import android.content.Intent
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
@@ -52,6 +51,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
+    @SuppressLint("PotentialBehaviorOverride")
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
@@ -163,10 +163,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun showModal(marker: Marker) {
         val spotifyUri = marker.tag as? String
         if (spotifyUri != null) {
-            val intent = Intent(this@MapsActivity, ModalActivity::class.java)
-            intent.putExtra("songTitle", marker.title)
-            intent.putExtra("spotifyUri", spotifyUri)
-            startActivity(intent)
+            val modalFragment = ModalFragment.newInstance(marker.title ?: "Song", spotifyUri)
+            modalFragment.show(supportFragmentManager, "ModalFragment")
         }
     }
 

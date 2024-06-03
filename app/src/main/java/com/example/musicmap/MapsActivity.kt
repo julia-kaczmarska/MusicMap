@@ -22,11 +22,10 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.tasks.Task
+import com.google.maps.android.SphericalUtil
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import kotlin.math.pow
-import kotlin.math.sqrt
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
@@ -35,7 +34,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private val LOCATION_PERMISSION_REQUEST_CODE = 1
     private val TAG = "MapsActivity"
     private val markers = mutableListOf<Marker>()
-
+    private var userLocation: LatLng? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,19 +68,23 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         loadMarkersFromApi()
+        getDeviceLocation()
 
         mMap.setOnMarkerClickListener { marker ->
-            val spotifyUri = marker.tag as? String
-            if (spotifyUri != null) {
-                val intent = Intent(this@MapsActivity, ModalActivity::class.java)
-                intent.putExtra("songTitle", marker.title)
-                intent.putExtra("spotifyUri", spotifyUri)
-                startActivity(intent)
+            userLocation?.let { userLatLng ->
+                Log.d(TAG, "User location: ${userLatLng.latitude}, ${userLatLng.longitude}")
+                Log.d(TAG, "Marker location: ${marker.position.latitude}, ${marker.position.longitude}")
+                val distance = calculateDistance(userLatLng.latitude, userLatLng.longitude, marker.position.latitude, marker.position.longitude)
+                Log.d(TAG, "Calculated distance: $distance meters")
+                if (distance <= 5) {
+                    showModal(marker)
+                } else {
+                    Log.d(TAG, "Marker is too far away to interact: $distance meters")
+                }
             }
             true
         }
     }
-
 
     private fun colorIntToFloatHue(colorInt: Int): Float {
         val hsv = FloatArray(3)
@@ -133,6 +136,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     if (task.isSuccessful) {
                         val lastKnownLocation = task.result
                         if (lastKnownLocation != null) {
+                            userLocation = LatLng(lastKnownLocation.latitude, lastKnownLocation.longitude)
                             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
                                 LatLng(lastKnownLocation.latitude, lastKnownLocation.longitude), 15f))
                             Log.d(TAG, "Current location: ${lastKnownLocation.latitude}, ${lastKnownLocation.longitude}")
@@ -150,33 +154,20 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    private fun checkProximityToMarkers(userLat: Double, userLng: Double) {
-        for (marker in markers) {
-            val markerPosition = marker.position
-            val distance = calculateDistance(userLat, userLng, markerPosition.latitude, markerPosition.longitude)
-            Log.d(TAG, "Distance to marker: $distance meters")
-            if (distance <= 2) {
-                val spotifyUri = marker.tag as? String
-                if (spotifyUri != null) {
-                    playSongOnSpotify(spotifyUri)
-                }
-            }
-        }
-    }
-
     private fun calculateDistance(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double {
-        val earthRadius = 6371000.0 // In meters
-        val dLat = Math.toRadians(lat2 - lat1)
-        val dLng = Math.toRadians(lng2 - lng1)
-        val a = Math.sin(dLat / 2).pow(2.0) + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) * Math.sin(dLng / 2).pow(2.0)
-        val c = 2 * Math.atan2(sqrt(a), sqrt(1 - a))
-        return earthRadius * c
+        val userLocation = LatLng(lat1, lng1)
+        val markerLocation = LatLng(lat2, lng2)
+        return SphericalUtil.computeDistanceBetween(userLocation, markerLocation)
     }
 
-    private fun playSongOnSpotify(spotifyUri: String) {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(spotifyUri))
-        intent.putExtra(Intent.EXTRA_REFERRER, Uri.parse("android-app://${this.packageName}"))
-        startActivity(intent)
+    private fun showModal(marker: Marker) {
+        val spotifyUri = marker.tag as? String
+        if (spotifyUri != null) {
+            val intent = Intent(this@MapsActivity, ModalActivity::class.java)
+            intent.putExtra("songTitle", marker.title)
+            intent.putExtra("spotifyUri", spotifyUri)
+            startActivity(intent)
+        }
     }
 
     private fun focusOnMyLocation() {

@@ -19,5 +19,7 @@
         android:background="@drawable/rounded_button"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
+        android:textColor="@color/cream"
+
         android:layout_marginBottom="16dp" />
 </RelativeLayout>

@@ -68,6 +68,8 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.okhttp)
 
+    implementation(libs.android.maps.utils)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -76,4 +78,5 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
+
 

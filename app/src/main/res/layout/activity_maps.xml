@@ -15,7 +15,8 @@
         android:id="@+id/btnFocusLocation"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Focus on My Location"
+        android:text="@string/focus"
+        android:background="@drawable/rounded_button"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="16dp" />

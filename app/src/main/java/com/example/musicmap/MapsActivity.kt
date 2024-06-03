@@ -3,6 +3,7 @@ package com.example.musicmap
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -34,14 +35,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private val LOCATION_PERMISSION_REQUEST_CODE = 1
     private val TAG = "MapsActivity"
     private val markers = mutableListOf<Marker>()
-
-    //---------------------------------------------------------
-    private lateinit var targetMarker: Marker
-    private val targetLatLng = LatLng(50.2892914, 19.1234135)
-    private val SPOTIFY_TRACK_URI = "https://open.spotify.com/track/453W8V5Ynwn6Tr28KuOwsO?si=e4abbd2970084672"
-    //---------------------------------------------------------
-
-
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,67 +70,59 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         loadMarkersFromApi()
 
-        targetMarker = mMap.addMarker(MarkerOptions().position(targetLatLng).title("Play Song Here"))!!
-
         mMap.setOnMarkerClickListener { marker ->
-            if (marker == targetMarker) {
-                playSongOnSpotify()
+            val spotifyUri = marker.tag as? String
+            if (spotifyUri != null) {
+                val intent = Intent(this@MapsActivity, ModalActivity::class.java)
+                intent.putExtra("songTitle", marker.title)
+                intent.putExtra("spotifyUri", spotifyUri)
+                startActivity(intent)
             }
             true
         }
     }
 
-    private fun playSongOnSpotify() {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(SPOTIFY_TRACK_URI))
-        intent.putExtra(Intent.EXTRA_REFERRER, Uri.parse("android-app://" + this.packageName))
-        startActivity(intent)
-    }
 
+    private fun colorIntToFloatHue(colorInt: Int): Float {
+        val hsv = FloatArray(3)
+        Color.colorToHSV(colorInt, hsv)
+        return hsv[0]
+    }
 
     private fun loadMarkersFromApi() {
         RetrofitClient.api.getMarkers().enqueue(object : Callback<List<MarkerEntity>> {
             override fun onResponse(call: Call<List<MarkerEntity>>, response: Response<List<MarkerEntity>>) {
-                Log.d(TAG, "Response received from API") // Log when response is received
+                Log.d(TAG, "Response received from API")
                 if (response.isSuccessful) {
-                    Log.d(TAG, "API call successful") // Log success status
+                    val color = colorIntToFloatHue(ContextCompat.getColor(this@MapsActivity, R.color.purple))
+                    Log.d(TAG, "API call successful")
                     response.body()?.let { markerList ->
-                        Log.d(TAG, "Received marker list size: ${markerList.size}") // Log the size of the received marker list
+                        Log.d(TAG, "Received marker list size: ${markerList.size}")
                         for (markerEntity in markerList) {
-                            Log.d(TAG, "Adding marker for ID: ${markerEntity.id}, Latitude: ${markerEntity.latitude}, Longitude: ${markerEntity.longitude}") // Log each marker entity before adding
+                            Log.d(TAG, "Adding marker for ID: ${markerEntity.id}, Latitude: ${markerEntity.latitude}, Longitude: ${markerEntity.longitude}")
                             val marker = mMap.addMarker(
                                 MarkerOptions()
                                     .position(LatLng(markerEntity.latitude, markerEntity.longitude))
-                                    .title("Play Song")
-                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)) // Optional: Change icon color
+                                    .title(markerEntity.description)
+                                    .icon(BitmapDescriptorFactory.defaultMarker(color))
                             )
                             marker?.tag = markerEntity.spotifyUri
                             marker?.let {
-                                Log.d(TAG, "Added marker with Spotify URI: ${it.tag}") // Log the Spotify URI of the added marker
+                                Log.d(TAG, "Added marker with Spotify URI: ${it.tag}")
                                 markers.add(it)
                             }
                         }
-
-                        mMap.setOnMarkerClickListener { marker ->
-                            val spotifyUri = marker.tag as? String
-                            if (spotifyUri!= null) {
-                                Log.d(TAG, "Marker clicked, playing song with Spotify URI: $spotifyUri") // Log when a marker is clicked
-                                playSongOnSpotify(spotifyUri)
-                            }
-                            true
-                        }
                     }
                 } else {
-                    Log.e(TAG, "Error: ${response.code()}") // Log the error code if the API call was not successful
+                    Log.e(TAG, "Error: ${response.code()}")
                 }
             }
 
             override fun onFailure(call: Call<List<MarkerEntity>>, t: Throwable) {
-                Log.e(TAG, "Error loading markers: ${t.message}") // Log the failure message
+                Log.e(TAG, "Error loading markers: ${t.message}")
             }
         })
     }
-
-
 
     private fun getDeviceLocation() {
         try {
@@ -151,7 +136,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
                                 LatLng(lastKnownLocation.latitude, lastKnownLocation.longitude), 15f))
                             Log.d(TAG, "Current location: ${lastKnownLocation.latitude}, ${lastKnownLocation.longitude}")
-                            checkProximityToMarkers(lastKnownLocation.latitude, lastKnownLocation.longitude)
                         } else {
                             Log.d(TAG, "Current location is null")
                         }

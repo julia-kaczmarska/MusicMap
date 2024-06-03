@@ -1,7 +1,6 @@
 package com.example.musicmap
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Bundle
@@ -34,6 +33,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private val TAG = "MapsActivity"
     private val markers = mutableListOf<Marker>()
     private var userLocation: LatLng? = null
+    private var accessToken: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,9 +49,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         btnFocusLocation.setOnClickListener {
             focusOnMyLocation()
         }
+
+        accessToken = intent.getStringExtra("accessToken")
+        Log.d(TAG, "Received access token: $accessToken")
     }
 
-    @SuppressLint("PotentialBehaviorOverride")
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
@@ -162,8 +164,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun showModal(marker: Marker) {
         val spotifyUri = marker.tag as? String
-        if (spotifyUri != null) {
-            val modalFragment = ModalFragment.newInstance(marker.title ?: "Song", spotifyUri)
+        if (spotifyUri != null && accessToken != null) {
+            val modalFragment = ModalFragment.newInstance(spotifyUri, accessToken!!)
             modalFragment.show(supportFragmentManager, "ModalFragment")
         }
     }
